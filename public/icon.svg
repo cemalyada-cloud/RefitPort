@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#122741"/><stop offset="100%" stop-color="#081524"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="58" fill="url(#bg)"/>
+  <text x="128" y="174" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-size="132" font-weight="800" fill="#eaf3fa" letter-spacing="2">RP</text>
+</svg>
