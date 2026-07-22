@@ -115,15 +115,30 @@ export default function Panel({ params }) {
 
   async function save() {
     setMsg('');
-    if (!form.name || !form.phone || !myCats.length || !myRegs.length) return setMsg(s.required);
+    if (!form.name || !form.phone) return setMsg(s.required);
+    if (!myCats.length || !myRegs.length) return setMsg(s.required);
 
     if (!company) {
-      const { data, error } = await sb().from('marketplace_companies').insert({
-        ...form, slug: `${slugify(form.name)}-${Math.random().toString(36).slice(2, 6)}`,
-        owner_user_id: user.id, status: 'draft', is_claimed: true,
-      }).select().single();
-      if (error) return setMsg(error.message);
-      await syncLinks(data.id);
+      const baseSlug = slugify(form.name) || 'firma';
+      const payload = {
+        name: form.name,
+        phone: form.phone,
+        email: form.email || null,
+        website: form.website || null,
+        whatsapp: form.whatsapp || null,
+        sub_location: form.sub_location || null,
+        description_tr: form.description_tr || null,
+        description_en: form.description_en || null,
+        slug: `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`,
+        owner_user_id: user.id,
+        status: 'draft',
+        is_claimed: true,
+      };
+      const { data, error } = await sb().from('marketplace_companies')
+        .insert(payload).select().single();
+      if (error) { setMsg('Kayıt hatası: ' + error.message); return; }
+      const linkErr = await syncLinks(data.id);
+      if (linkErr) { setMsg('Bağlantı hatası: ' + linkErr); return; }
       setCompany(data); setMsg(s.saved);
       return;
     }
@@ -145,12 +160,17 @@ export default function Panel({ params }) {
   async function syncLinks(companyId) {
     await sb().from('marketplace_company_categories').delete().eq('company_id', companyId);
     await sb().from('marketplace_company_regions').delete().eq('company_id', companyId);
-    if (myCats.length)
-      await sb().from('marketplace_company_categories')
+    if (myCats.length) {
+      const { error } = await sb().from('marketplace_company_categories')
         .insert(myCats.map(id => ({ company_id: companyId, category_id: id })));
-    if (myRegs.length)
-      await sb().from('marketplace_company_regions')
+      if (error) return error.message;
+    }
+    if (myRegs.length) {
+      const { error } = await sb().from('marketplace_company_regions')
         .insert(myRegs.map(id => ({ company_id: companyId, region_id: id })));
+      if (error) return error.message;
+    }
+    return null;
   }
 
   async function submitForApproval() {
