@@ -12,7 +12,7 @@ const L = {
         assign:'Slot ata', region:'Bölge', category:'Kategori', company:'Firma',
         until:'Bitiş tarihi', remove:'Kaldır', slotFull:'Bu bölge+kategori için 3 slot dolu.',
         refresh:'Sayfalar tazelendi.', pendingRefs:'Bekleyen Referanslar',
-        approveRef:'Referansı onayla (manuel)', founding:'Kurucu üye', mark:'İşaretle' },
+        approveRef:'Referansı onayla (manuel)', founding:'Kurucu üye', mark:'İşaretle', refreshBtn:'Sayfaları Tazele' },
   en: { title:'Admin Panel', queue:'Approval Queue', revisions:'Change Requests',
         companies:'Companies', featured:'Featured Slots', claims:'Claim Requests',
         approve:'Approve', reject:'Reject', suspend:'Suspend', publish:'Publish',
@@ -20,7 +20,7 @@ const L = {
         assign:'Assign slot', region:'Region', category:'Category', company:'Company',
         until:'End date', remove:'Remove', slotFull:'3 slots already filled for this region+category.',
         refresh:'Pages refreshed.', pendingRefs:'Pending References',
-        approveRef:'Approve reference (manual)', founding:'Founding member', mark:'Mark' },
+        approveRef:'Approve reference (manual)', founding:'Founding member', mark:'Mark', refreshBtn:'Refresh Pages' },
 };
 
 const inp = { width:'100%', height:42, background:'var(--navy-soft)', color:'var(--white)',
@@ -181,8 +181,11 @@ export default function Admin({ params }) {
     <div className="wrap" style={{ padding:'28px 18px 80px', display:'grid', gap:18 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <h1 style={{ fontSize:'1.3rem' }}>{s.title}</h1>
-        <button className="btn ghost" style={btnSm}
-          onClick={async ()=>{ await sb().auth.signOut(); router.replace(`/${lang}`); }}>{s.logout}</button>
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="btn ghost" style={btnSm} onClick={refreshPages}>{s.refreshBtn}</button>
+          <button className="btn ghost" style={btnSm}
+            onClick={async ()=>{ await sb().auth.signOut(); router.replace(`/${lang}`); }}>{s.logout}</button>
+        </div>
       </div>
       {msg && <p style={{ color:'#7fd7b0', fontSize:'.82rem' }}>{msg}</p>}
 

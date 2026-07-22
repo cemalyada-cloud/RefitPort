@@ -199,6 +199,11 @@ export default function Panel({ params }) {
       boat_name: f.get('boat'), contact_email: f.get('email'), work_summary: f.get('work'),
     }).select().single();
     if (error) return setMsg(error.message);
+    // kaptana onay daveti maili gönder (best-effort)
+    fetch('/api/reference', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ referenceId: data.id }),
+    }).catch(() => {});
     setRefs([data, ...refs]); e.target.reset();
   }
 

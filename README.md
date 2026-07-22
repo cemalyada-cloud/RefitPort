@@ -39,3 +39,28 @@ Next.js 14 (App Router) + Supabase + ISR. Navy/beyaz kimlik, TR/EN.
 - Claim akışı arayüzü (profildeki buton şimdilik e-posta açıyor)
 - sitemap.xml / robots.txt
 - Hukuki metinler (KVKK aydınlatma, kullanım şartları)
+
+
+## Yeni ortam değişkenleri (v1.1)
+Vercel → Settings → Environment Variables'a ekle (Production + Preview):
+
+| Değişken | Değer | Not |
+|---|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → **service_role** | GİZLİ — `NEXT_PUBLIC_` YOK. Sadece mail API'leri kullanır. |
+| `SMTP_HOST` | `mail.privateemail.com` | Namecheap Private Email |
+| `SMTP_PORT` | `465` | |
+| `SMTP_USER` | `noreply@refitport.com` | Namecheap'te bu mailbox'ı oluştur |
+| `SMTP_PASS` | mailbox şifresi | |
+| `SMTP_FROM` | `RefitPort <noreply@refitport.com>` | |
+
+## v1.1 ile gelenler
+- **SEO:** `/sitemap.xml` (tüm bölge+kategori ve firma sayfaları) + `/robots.txt` (panel/admin/api gizli)
+- **Admin → Sayfaları Tazele** butonu: SQL'le toplu iş sonrası önbelleği tek tıkla tazeler
+- **Referans onay maili:** firma referans ekleyince kaptana token'lı mail → `/tr/referans?token=...` → onay/red + adıyla/anonim seçimi
+- **Lead bildirimi:** yeni talep firmanın e-postasına düşer
+- **Claim akışı:** profildeki "Sahiplenin" → giriş → talep → admin onayı → profil devri
+
+## Namecheap SMTP notu
+Private Email hesabında `noreply@refitport.com` mailbox'ı açman gerekir (Namecheap → Private Email).
+Alternatif olarak mevcut `superyachtapps.com` SMTP'sini de kullanabilirsin; o zaman SMTP_* değerlerini
+ona göre gir ve SMTP_FROM'u o adrese ayarla.

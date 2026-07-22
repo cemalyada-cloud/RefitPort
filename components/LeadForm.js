@@ -28,12 +28,18 @@ export default function LeadForm({ lang, companyId }) {
     e.preventDefault();
     if (hp) return; // bot
     setState('sending');
-    const { error } = await supabase.from('marketplace_leads').insert({
+    const { data, error } = await supabase.from('marketplace_leads').insert({
       company_id: companyId,
       name: f.name, email: f.email, phone: f.phone || null,
       boat_name: f.boat || null, message: f.message,
       date_from: f.from || null, date_to: f.to || null,
-    });
+    }).select().single();
+    if (!error && data) {
+      fetch('/api/send-mail', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: data.id }),
+      }).catch(() => {});
+    }
     setState(error ? 'error' : 'sent');
   }
 

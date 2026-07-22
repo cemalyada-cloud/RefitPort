@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import LeadForm from '../../../../components/LeadForm';
 import Gallery from '../../../../components/Gallery';
+import ClaimButton from '../../../../components/ClaimButton';
 import { getCompany, getPublishedSlugs } from '../../../../lib/data';
 import { t, pick, LANGS } from '../../../../lib/i18n';
 
@@ -132,9 +133,7 @@ export default async function CompanyPage({ params }) {
           {!company.is_claimed && (
             <section className="panel">
               <h2>{t[lang].isYours}</h2>
-              <a className="btn ghost" href={`mailto:info@refitport.com?subject=Claim: ${company.name}`}>
-                {t[lang].claimIt}
-              </a>
+              <ClaimButton lang={lang} companyId={company.id} />
             </section>
           )}
         </aside>
