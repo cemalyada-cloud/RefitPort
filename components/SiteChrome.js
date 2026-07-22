@@ -11,6 +11,9 @@ export function SiteHeader({ lang }) {
           REFIT<span>PORT</span>
         </Link>
         <nav className="lang-switch">
+          <Link href={`/${lang}/giris`} style={{ marginRight: 6 }}>
+            {lang === 'tr' ? 'Firma Girişi' : 'Company Login'}
+          </Link>
           <Link href={`/${lang}`} className="on">{lang.toUpperCase()}</Link>
           <Link href={`/${other}`}>{other.toUpperCase()}</Link>
         </nav>
