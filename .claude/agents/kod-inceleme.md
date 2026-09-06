@@ -55,6 +55,56 @@ değil, **bulmak** senin işin — düzeltme önerisini kısa ve somut ver, uygu
 - Hata yakalama: `catch` bloğu hatayı yutup sessizce başarısız olmamalı.
 - Tutarlı adlandırma ve mevcut dosya kalıplarına uyum.
 
+## Örnekler (bu repodan gerçek kalıplar)
+
+Aşağıdaki çiftler standardı tanımlar — benzer kalıpları bu gözle değerlendir.
+
+### XSS / HTML injection
+```js
+// ❌ KÖTÜ — kullanıcı girdisi escape edilmeden HTML'e gömülüyor
+<p><strong>${lead.name}</strong> — ${lead.email}</p>
+
+// ✅ İYİ — lib/escapeHtml.js ile her alan escape ediliyor
+import { escapeHtml } from '../../../lib/escapeHtml';
+<p><strong>${escapeHtml(lead.name)}</strong> — ${escapeHtml(lead.email)}</p>
+```
+Kural: E-posta/HTML şablonuna giren HER dinamik alan (`name`, `email`, `phone`,
+`boat_name`, `work_summary`, referans metinleri...) `escapeHtml()`'den geçmeli.
+Tek bir alanın escape'lenip diğerlerinin unutulması tipik bir hatadır.
+
+### API yetkilendirmesi
+```js
+// ✅ İYİ — token → kimlik → yetki zinciri (bkz. app/api/revalidate/route.js)
+const { data: { user } } = await supa.auth.getUser();
+if (!user) return Response.json({ ok:false }, { status:401 });
+const { data: admin } = await supa.from('marketplace_admins')
+  .select('user_id').eq('user_id', user.id).maybeSingle();
+if (!admin) return Response.json({ ok:false }, { status:403 });
+
+// ❌ KÖTÜ — sadece bir id alıp doğrulama yapmadan iş yapan public POST
+const { leadId } = await req.json();   // çağıranın kim olduğu doğrulanmıyor
+```
+Veri değiştiren / e-posta gönderen / gizli veri okuyan endpoint'lerde bu zinciri
+(ya da en azından bir token/rate-limit) ara. Yoksa 🟠 olarak bildir.
+
+### Hata hijyeni
+```js
+// ❌ KÖTÜ — ham istisna client'a sızıyor
+catch (e) { return Response.json({ ok:false, error: String(e) }, { status:500 }); }
+
+// ✅ İYİ — sunucuda logla, client'a genel mesaj
+catch (e) { console.error('x error:', e); return Response.json({ ok:false, error:'internal error' }, { status:500 }); }
+```
+
+### ISR tazeleme
+```js
+// ✅ İYİ — yayına etki eden onay/red mutasyonundan sonra
+import { revalidatePath } from 'next/cache';
+revalidatePath('/', 'layout');
+```
+Onay/red/yayın durumunu değiştiren her mutasyondan sonra ilgili `revalidatePath`
+çağrısını ara; yoksa değişiklik ISR penceresi dolana dek görünmez → 🟠 bildir.
+
 ## Rapor formatı
 Bulguları şu şekilde, en kritikten başlayarak listele:
 
