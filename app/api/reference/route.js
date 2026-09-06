@@ -1,5 +1,7 @@
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { sendMail } from '../../../lib/mailer';
+import { escapeHtml } from '../../../lib/escapeHtml';
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://refitport.com';
 
@@ -22,9 +24,9 @@ export async function POST(req) {
     const html = `
       <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;color:#0d1b2b">
         <h2 style="color:#0d1b2b">RefitPort — Referans Onayı</h2>
-        <p><strong>${companyName}</strong>, RefitPort profilinde sizi referans olarak göstermek istiyor.</p>
-        <p><strong>Tekne:</strong> ${ref.boat_name}<br>
-           <strong>Yapılan iş:</strong> ${ref.work_summary}</p>
+        <p><strong>${escapeHtml(companyName)}</strong>, RefitPort profilinde sizi referans olarak göstermek istiyor.</p>
+        <p><strong>Tekne:</strong> ${escapeHtml(ref.boat_name)}<br>
+           <strong>Yapılan iş:</strong> ${escapeHtml(ref.work_summary)}</p>
         <p>Bu referansı onaylıyorsanız aşağıdaki bağlantıya tıklayın:</p>
         <p><a href="${approveUrl}" style="display:inline-block;background:#0d1b2b;color:#fff;
            padding:12px 22px;border-radius:8px;text-decoration:none">Referansı görüntüle ve onayla</a></p>
@@ -42,7 +44,8 @@ export async function POST(req) {
 
     return Response.json({ ok: true });
   } catch (e) {
-    return Response.json({ ok: false, error: String(e) }, { status: 500 });
+    console.error('reference POST error:', e);
+    return Response.json({ ok: false, error: 'internal error' }, { status: 500 });
   }
 }
 
@@ -69,8 +72,13 @@ export async function PATCH(req) {
       decided_at: new Date().toISOString(),
     }).eq('id', ref.id);
 
+    // Onay/red kararı firma profilinde görünen referansları etkiler;
+    // ISR penceresini beklemeden sayfaları tazele (projedeki onay akışı deseni).
+    revalidatePath('/', 'layout');
+
     return Response.json({ ok: true });
   } catch (e) {
-    return Response.json({ ok: false, error: String(e) }, { status: 500 });
+    console.error('reference PATCH error:', e);
+    return Response.json({ ok: false, error: 'internal error' }, { status: 500 });
   }
 }
