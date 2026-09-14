@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "node scripts/sir-kapisi.mjs .next public",
+    "postbuild": "node scripts/sir-kapisi.mjs .next/static public",
     "start": "next start"
   },
   "dependencies": {
