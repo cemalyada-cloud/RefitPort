@@ -14,7 +14,7 @@
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const TOOL = 'sir-kapisi', VER = '1.1.0';
+const TOOL = 'sir-kapisi', VER = '1.1.1';
 const EXT = new Set(['.js','.jsx','.ts','.tsx','.mjs','.cjs','.json','.html','.css','.map','.txt','.env']);
 const JWT = /eyJ[A-Za-z0-9_-]{5,}\.eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}/g;
 // SUNUCU çıktısı ve yönetilen dizinler — davranışta hariç:
@@ -37,14 +37,14 @@ function role(jwt) {
   } catch { return null; }
 }
 
-let scanned = 0, bytes = 0, jwtCount = 0; const crit = [], seen = [];
+let scanned = 0, bytes = 0, jwtCount = 0; const crit = [], seen = [], uniq = new Set();
 const present = ROOTS.filter(existsSync);
 for (const root of present) for (const f of walk(root)) {
   let txt; try { txt = readFileSync(f, 'utf8'); } catch { continue; }
   scanned++; bytes += Buffer.byteLength(txt);
   const lines = txt.split('\n');
   for (let i = 0; i < lines.length; i++) for (const m of (lines[i].match(JWT) || [])) {
-    jwtCount++;
+    jwtCount++; uniq.add(m);
     const r = role(m);
     if (!r) { seen.push(`${f}:${i+1} · JWT çözülemedi`); continue; }
     const rec = `${f}:${i+1} · role=${r.role} · ref=${r.ref}`;
@@ -53,7 +53,7 @@ for (const root of present) for (const f of walk(root)) {
 }
 
 // Kimlik + payda (kural 122: eleyen ölçüt ne kadar elediğini basar — dosya VE bayt)
-console.log(`${TOOL} v${VER} · kapsam=tarayıcıya-inen (sunucu çıktısı hariç) · kök: ${present.join(',') || '(yok)'} · dosya: ${scanned} · bayt: ${bytes} · JWT: ${jwtCount} · service_role: ${crit.length}`);
+console.log(`${TOOL} v${VER} · kapsam=tarayıcıya-inen (sunucu çıktısı hariç) · kök: ${present.join(',') || '(yok)'} · dosya: ${scanned} · bayt: ${bytes} · JWT: ${jwtCount} · benzersiz: ${uniq.size} · service_role: ${crit.length}`);
 for (const s of seen) console.log(`  ${s}`);           // adres satırı, token yok
 
 if (present.length === 0 || scanned === 0) {
