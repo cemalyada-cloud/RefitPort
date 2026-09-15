@@ -8,14 +8,16 @@
 //     yanıt katmanı (SSR HTML/RSC) bu kapının GÖREMEDİĞİ yerdir — kapsam ürüne göre payda↔dilim değişir.
 //
 // ATEŞLEME KANITI (kural 126): JWT:0 tek başına "bulunacak yok" ile "yanlış yere bakıldı"yı ayıramaz.
-//   Kapı, gerçek kökün altına sentetik anon yem yazar, yakalar, siler. Yakalayamazsa ölçüm GEÇERSİZ (exit 3).
+//   Kapı, gerçek kökün altına DERİN bir yola sentetik anon yem yazar (özyineleme kanıtı),
+//   yemi walk() ile BULUR (yalnız matcher değil, ağacın o derinliğe indiği de kanıtlanır), siler.
+//   Yakalayamazsa ölçüm GEÇERSİZ (exit 3). Tavan: yem yalnız yazıldığı derinliğe kadar kanıttır.
 //
 // SIR HİJYENİ: token ASLA basılmaz — yalnız role + ref parmak izi + adres.
 // Çıkış: 0 = tarandı+ateşleme kanıtlı, service_role YOK · 1 = service_role BULUNDU · 3 = ÖLÇÜLEMEDİ
 import { readdirSync, readFileSync, statSync, existsSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
-const TOOL = 'sir-kapisi', VER = '1.2.0';
+const TOOL = 'sir-kapisi', VER = '1.2.1';
 const EXT = new Set(['.js','.jsx','.ts','.tsx','.mjs','.cjs','.json','.html','.css','.map','.txt','.env']);
 const JWT = /eyJ[A-Za-z0-9_-]{5,}\.eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}/g;
 const SKIP = /(^|\/)(node_modules|\.git)(\/|$)|\.next\/(server|cache|types)(\/|$)|(^|\/)server(\/|$)/;
@@ -60,12 +62,19 @@ try {
   const probeRoot = dirRoots.find(r => /static|dist|build/.test(r)) || dirRoots[0] || null;
   if (probeRoot) {
     probeDir = join(probeRoot, '__sirkapisi_probe__');
-    const pf = join(probeDir, 'p.js');
+    const pf = join(probeDir, 'chunks', 'app', 'derin', 'p.js');   // derin yol: özyineleme kanıtı
     const yem = `${b64u({alg:'HS256',typ:'JWT'})}.${b64u({role:'anon',ref:'__probe__'})}.sirkapisiprobe`;
-    mkdirSync(probeDir, { recursive: true });
+    mkdirSync(join(probeDir, 'chunks', 'app', 'derin'), { recursive: true });
     writeFileSync(pf, `const _p='${yem}'\n`);
-    const m = (readFileSync(pf, 'utf8').match(JWT) || []);
-    fireProof = !!(m.length && role(m[0]) && role(m[0]).role === 'anon');
+    // walk() ile BUL: ağacın o derinliğe indiği + matcher ateşlediği birlikte kanıtlanır
+    for (const f of walk(probeRoot)) {
+      if (f === pf) {
+        const mm = readFileSync(f, 'utf8').match(JWT) || [];
+        if (mm.length && role(mm[0]) && role(mm[0]).role === 'anon') fireProof = true;
+        break;
+      }
+    }
+    if (fireProof === null) fireProof = false;
   }
 } catch { fireProof = false; }
 finally { if (probeDir) { try { rmSync(probeDir, { recursive: true, force: true }); } catch {} } }
